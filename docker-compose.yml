@@ -1,0 +1,71 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: aerosupply
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-aerosupply}
+      POSTGRES_DB: aerosupply
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aerosupply"]
+      interval: 5s
+      retries: 10
+
+  mongo:
+    image: mongo:7
+    volumes:
+      - mongodata:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment: &backend-env
+      DATABASE_URL: postgresql+psycopg://aerosupply:${POSTGRES_PASSWORD:-aerosupply}@postgres:5432/aerosupply
+      MONGO_URL: mongodb://mongo:27017
+      AEROSUPPLY_DATA: /data
+      AEROSUPPLY_ARTIFACTS: /app/artifacts
+    volumes:
+      - exports:/data
+    depends_on:
+      postgres: { condition: service_healthy }
+      mongo: { condition: service_healthy }
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+  # Optional orchestration: `docker compose --profile airflow up` -> http://localhost:8080
+  airflow:
+    profiles: ["airflow"]
+    image: apache/airflow:3.4.0-python3.13
+    command: standalone
+    environment:
+      <<: *backend-env
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+      PYTHONPATH: /opt/aerosupply
+      _PIP_ADDITIONAL_REQUIREMENTS: "pymongo==4.20.0 mongomock==4.3.0 networkx==3.7 scikit-learn==1.9.1 psycopg[binary]==3.3.9"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./backend/aerosupply:/opt/aerosupply/aerosupply
+      - ./backend/artifacts:/app/artifacts
+      - exports:/data
+    depends_on:
+      postgres: { condition: service_healthy }
+      mongo: { condition: service_healthy }
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
+  mongodata:
+  exports:
