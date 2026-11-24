@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { api } from "../api.js";
+import { api, DEMO, DEMO_DURATIONS, DEMO_LOSSES } from "../api.js";
 import { useFetch } from "../useFetch.js";
 import Plot from "../components/Plot.jsx";
 import { Card, Loading, Stat, StatusBadge, fmt } from "../components/ui.jsx";
@@ -25,7 +25,7 @@ export default function Simulator() {
     api.simulate({ supplier_id: sid, duration_days: duration, capacity_loss: loss / 100, start_in_days: start, save })
       .then((r) => { setRes(r); if (save) saved.reload(); }).catch(setErr).finally(() => setBusy(false));
   };
-  useEffect(() => { if (sid) run(); }, [sid]);
+  useEffect(() => { if (sid) run(); }, DEMO ? [sid, duration, loss] : [sid]);
   if (loading || error) return <Loading error={error} />;
   const sel = sups.find((s) => s.supplier_id === sid);
   return (
@@ -41,10 +41,25 @@ export default function Simulator() {
                 </optgroup>))}
             </select>
           </label>
-          <label>Duration: {duration} days<input type="range" min="7" max="180" step="1" value={duration} onChange={(e) => setDuration(+e.target.value)} /></label>
-          <label>Capacity lost: {loss} %<input type="range" min="10" max="100" step="5" value={loss} onChange={(e) => setLoss(+e.target.value)} /></label>
-          <label>Starts in: {start} days<input type="range" min="0" max="60" step="1" value={start} onChange={(e) => setStart(+e.target.value)} /></label>
-          <div className="filters"><button className="btn primary" disabled={busy} onClick={() => run(false)}>{busy ? "Running…" : "Run"}</button>
+          {DEMO ? (
+            <>
+              <label>Duration
+                <select value={duration} onChange={(e) => setDuration(+e.target.value)}>
+                  {DEMO_DURATIONS.map((d) => <option key={d} value={d}>{d} days</option>)}
+                </select></label>
+              <label>Capacity lost
+                <select value={loss} onChange={(e) => setLoss(+e.target.value)}>
+                  {DEMO_LOSSES.map((l) => <option key={l} value={l}>{l} %</option>)}
+                </select></label>
+            </>
+          ) : (
+            <>
+              <label>Duration: {duration} days<input type="range" min="7" max="180" step="1" value={duration} onChange={(e) => setDuration(+e.target.value)} /></label>
+              <label>Capacity lost: {loss} %<input type="range" min="10" max="100" step="5" value={loss} onChange={(e) => setLoss(+e.target.value)} /></label>
+              <label>Starts in: {start} days<input type="range" min="0" max="60" step="1" value={start} onChange={(e) => setStart(+e.target.value)} /></label>
+            </>
+          )}
+          <div className="filters">{!DEMO && <button className="btn primary" disabled={busy} onClick={() => run(false)}>{busy ? "Running…" : "Run"}</button>}
             <button className="btn" disabled={busy || !res} onClick={() => run(true)}>Save scenario</button></div>
         </div>
         {sel && <p className="small muted" style={{ marginTop: 12 }}>

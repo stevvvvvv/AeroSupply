@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { api } from "../api.js";
+import { api, DEMO, DEMO_BUDGETS } from "../api.js";
 import { useFetch } from "../useFetch.js";
 import Plot from "../components/Plot.jsx";
 import { Card, Loading, Meter, Stat, fmt, label } from "../components/ui.jsx";
@@ -17,10 +17,20 @@ export default function Mitigation() {
       <Card title="Expediting budget allocation"
             subtitle="Which parts to buy as expedited / spot orders (35 % premium) to protect the most aircraft? Optimised on the Monte-Carlo shortage scenarios: greedy marginal allocation, optimal for this separable concave problem.">
         <div className="filters">
-          <label className="check">Budget (€m)
-            <input type="number" min="0.5" max="200" step="0.5" value={budget} onChange={(e) => setBudget(e.target.value)} style={{ width: 90 }} />
-          </label>
-          <button className="btn primary" onClick={() => setApplied(Number(budget) || 5)}>Optimise</button>
+          {DEMO ? (
+            <label className="check">Budget (€m)
+              <select value={applied} onChange={(e) => setApplied(Number(e.target.value))}>
+                {DEMO_BUDGETS.map((b) => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </label>
+          ) : (
+            <>
+              <label className="check">Budget (€m)
+                <input type="number" min="0.5" max="200" step="0.5" value={budget} onChange={(e) => setBudget(e.target.value)} style={{ width: 90 }} />
+              </label>
+              <button className="btn primary" onClick={() => setApplied(Number(budget) || 5)}>Optimise</button>
+            </>
+          )}
         </div>
       </Card>
       {loading || error ? <Loading error={error} /> : (

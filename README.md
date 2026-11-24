@@ -6,6 +6,9 @@ put at risk?** It scores tier-1 suppliers, detects abnormal delivery behaviour, 
 dependency network down to raw materials, forecasts stock-outs from the open order book and
 simulates what happens if a supplier stops.
 
+**Live demo: https://stevvvvvv.github.io/AeroSupply/**
+(static version: the real pipeline's outputs frozen on 1 Nov 2026; what-if scenarios and budgets pre-computed on a grid)
+
 ![Overview — OTD trend, programs at risk, highest-exposure suppliers](docs/01-overview.png)
 
 | | |
@@ -218,6 +221,13 @@ python -m pytest -q
 
 cd ../frontend
 npm install && npm run dev                    # http://localhost:5173
+```
+
+### Static demo (GitHub Pages)
+
+```bash
+cd backend && python -m scripts.export_demo   # every API response as JSON -> frontend/public/demo
+cd ../frontend && npm run build:demo          # dist/ = static site (HashRouter, relative paths)
 ```
 
 ---

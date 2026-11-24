@@ -8,6 +8,7 @@ import Network from "./pages/Network.jsx";
 import Simulator from "./pages/Simulator.jsx";
 import Mitigation from "./pages/Mitigation.jsx";
 import Model from "./pages/Model.jsx";
+import { DEMO } from "./api.js";
 
 export default function App() {
   return (
@@ -41,6 +42,13 @@ export default function App() {
         </footer>
       </aside>
       <main className="content">
+        {DEMO && (
+          <div className="demo-banner">
+            Static demo: real pipeline outputs frozen on 1 Nov 2026 (synthetic data). What-if scenarios and budgets are
+            pre-computed on a grid. Full stack (FastAPI, PostgreSQL, MongoDB, Airflow):{" "}
+            <a href="https://github.com/stevvvvvv/AeroSupply">GitHub</a>.
+          </div>
+        )}
         <Routes>
           <Route path="/" element={<Overview />} />
           <Route path="/suppliers" element={<Suppliers />} />
