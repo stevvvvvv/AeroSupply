@@ -47,7 +47,7 @@ export function Meter({ value, title }) {
   const pct = Math.round(value * 100);
   return (
     <div className="hbar" title={title || `${pct}%`}>
-      <div className="hbar-fill" style={{ width: `${pct}%` }} />
+      <div className={`hbar-fill${value >= 0.5 ? " hi" : ""}`} style={{ width: `${Math.max(pct, 2)}%` }} />
       <span>{pct}%</span>
     </div>
   );

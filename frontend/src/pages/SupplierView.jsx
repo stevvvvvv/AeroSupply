@@ -106,7 +106,7 @@ export default function SupplierView() {
             <div>
               <div className="muted small">Supplied by (sub-tier)</div>
               {s.upstream.length === 0 ? <span className="muted">— raw material / no mapped sub-tier</span> : (
-                <div className="chain">{s.upstream.map((u) => (
+                <div className="chain-tags">{s.upstream.map((u) => (
                   <Link key={u.upstream_id} to={`/suppliers/${u.upstream_id}`} className="tag">
                     {u.name} · {label(u.input_commodity)} · {Math.round(u.share * 100)}% <span style={{ color: STATUS[u.level]?.color }}>{STATUS[u.level]?.icon}</span>
                   </Link>))}</div>)}
@@ -114,7 +114,7 @@ export default function SupplierView() {
             <div>
               <div className="muted small">Customers</div>
               {s.customers.length === 0 ? <span className="muted">OEM final assembly lines</span> : (
-                <div className="chain">{s.customers.map((u) => (
+                <div className="chain-tags">{s.customers.map((u) => (
                   <Link key={u.customer_id} to={`/suppliers/${u.customer_id}`} className="tag">
                     {u.name} <span style={{ color: STATUS[u.level]?.color }}>{STATUS[u.level]?.icon}</span>
                   </Link>))}</div>)}

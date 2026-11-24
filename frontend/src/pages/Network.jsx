@@ -36,26 +36,28 @@ export default function Network() {
       }
     });
     return { x: xs, y: ys, type: "scatter", mode: "lines", hoverinfo: "skip", showlegend: false,
-             line: { color: active ? (reach ? "rgba(57,135,229,0.55)" : "rgba(195,194,183,0.14)") : "rgba(195,194,183,0.05)", width: 1 } };
+             line: { color: active ? (reach ? C.edgeHi : C.edge) : C.edgeDim, width: 1 } };
   };
   const sup = data.nodes.filter((n) => n.kind === "supplier");
   const parts = data.nodes.filter((n) => n.kind === "part");
   const progs = data.nodes.filter((n) => n.kind === "program");
   const op = (n) => (on(n.id) ? 1 : 0.15);
-  const partColor = (p) => (p.p60 >= 0.5 ? STATUS.CRITICAL.color : p.p60 >= 0.2 ? STATUS.WARNING.color : C.muted);
+  const partColor = (p) => (p.p60 >= 0.5 ? STATUS.CRITICAL.color : p.p60 >= 0.2 ? STATUS.WARNING.color : "#cbd2dd");
+  // healthy nodes stay neutral so the network reads by exception
+  const nodeColor = (lv) => (lv === "HEALTHY" ? "#aab3c2" : STATUS[lv].color);
   const traces = [
     edgeTrace(false), edgeTrace(true),
     ...Object.keys(STATUS).map((lv) => {
       const n = sup.filter((s) => (s.level || "HEALTHY") === lv);
       return { x: n.map((s) => s.x), y: n.map((s) => s.y), type: "scatter", mode: "markers", name: `Supplier · ${STATUS[lv].label}`,
                customdata: n.map((s) => [s.id, s.label, label(s.commodity), s.impact ?? 0]),
-               marker: { size: n.map((s) => 7 + Math.sqrt(s.impact || 0) * 0.8), color: STATUS[lv].color, opacity: n.map(op),
+               marker: { size: n.map((s) => 7 + Math.sqrt(s.impact || 0) * 0.8), color: nodeColor(lv), opacity: n.map(op),
                          symbol: n.map((s) => (s.hidden_spof_parts > 0 ? "diamond" : "circle")), line: { color: C.surface, width: 1.5 } },
                hovertemplate: "<b>%{customdata[1]}</b><br>%{customdata[2]}<br>aircraft at risk if lost 90 d: %{customdata[3]}<extra></extra>" };
     }),
     { x: parts.map((p) => p.x), y: parts.map((p) => p.y), type: "scatter", mode: "markers", name: "Part (colour = stock-out risk)",
       customdata: parts.map((p) => [p.id, p.label, Math.round((p.p60 || 0) * 100)]),
-      marker: { size: 6, color: parts.map(partColor), opacity: parts.map(op) },
+      marker: { size: 5, color: parts.map(partColor), opacity: parts.map(op) },
       hovertemplate: "<b>%{customdata[1]}</b><br>P(stock-out 60 d) %{customdata[2]}%<extra></extra>" },
     { x: progs.map((p) => p.x), y: progs.map((p) => p.y), type: "scatter", mode: "markers+text", name: "Program", showlegend: false,
       text: progs.map((p) => p.key), textposition: "middle right", textfont: { color: C.text2 },
@@ -106,7 +108,7 @@ export default function Network() {
                 <td className="strong">{r.name} <span className="muted small">{r.part_id}</span></td>
                 <td>{r.programs}</td>
                 <td className="small">{r.source_names.join(" · ")}</td>
-                <td><div className="chain">{r.common_upstream.map((u) => (
+                <td><div className="chain-tags">{r.common_upstream.map((u) => (
                   <Link key={u.supplier_id} to={`/suppliers/${u.supplier_id}`} className="tag" onClick={(e) => e.stopPropagation()}>
                     {u.name} · T{u.tier} · {u.country} <span style={{ color: STATUS[u.level]?.color }}>{STATUS[u.level]?.icon}</span></Link>))}</div></td>
                 <td><Meter value={r.p_stockout_60} /></td>

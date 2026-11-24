@@ -11,6 +11,11 @@ const CRISES = [
   ["2022-06", "2024-03", "Castings & forgings crunch"],
 ];
 
+function riskText(c) {
+  if (!c.critical && !c.warning) return "no supplier flagged";
+  return [c.critical && `${c.critical} critical`, c.warning && `${c.warning} warning`].filter(Boolean).join(" · ");
+}
+
 export default function Overview() {
   const { data, error, loading } = useFetch(api.overview);
   const nav = useNavigate();
@@ -18,27 +23,42 @@ export default function Overview() {
   const k = data.kpis;
   const lv = k.tier1_by_level;
   const otdDelta = k.otd_90d - k.otd_prev_90d;
+  const ch = Object.fromEntries(data.chain.map((c) => [c.stage, c]));
+  const atRisk = (lv.CRITICAL || 0) + (lv.WARNING || 0);
+  const stages = [
+    { key: "tier3", name: "Raw materials", to: "/suppliers?tier=3", c: ch.tier3, risk: (c) => riskText(c) },
+    { key: "tier2", name: "Sub-tier suppliers", to: "/suppliers?tier=2", c: ch.tier2, risk: (c) => riskText(c) },
+    { key: "tier1", name: "Tier-1 suppliers", to: "/suppliers?tier=1", c: ch.tier1, risk: (c) => riskText(c) },
+    { key: "parts", name: "Parts", to: "/parts", c: ch.parts, hot: ch.parts.short_now > 0,
+      risk: (c) => `${c.short_now} missing now · ${c.at_risk} likely short in 60 days` },
+    { key: "programs", name: "Aircraft programs", to: "/simulate", c: ch.programs, hot: ch.programs.at_risk > 0,
+      risk: (c) => `${c.at_risk} of ${c.n} waiting on a missing part` },
+  ];
   return (
     <>
-      <div className="page-head">
-        <div>
-          <div className="crumbs">Supply-chain risk · as of {data.as_of}</div>
-          <h1>Overview</h1>
+      <section className="hero">
+        <h1>{atRisk} of {k.tier1} tier-1 suppliers need attention, and {k.parts_short_now} parts are already missing on the line.</h1>
+        <p className="lede">
+          On-time delivery fell to {pct(k.otd_90d)} over the last 90 days ({otdDelta >= 0 ? "+" : "−"}{Math.abs(Math.round(otdDelta * 100))} points).
+          Follow the chain from raw materials to aircraft to see where the risk sits.
+        </p>
+        <div className="chain">
+          {stages.map((st) => (
+            <Link key={st.key} to={st.to} className={`stage${st.hot ?? (st.c.critical > 0) ? " hot" : ""}`}>
+              <div className="node"><i /></div>
+              <div className="count">{st.c.n}</div>
+              <div className="name">{st.name}</div>
+              <div className="risk">{st.risk(st.c)}</div>
+            </Link>
+          ))}
         </div>
-      </div>
+      </section>
 
       <div className="stats">
-        <Stat label="On-time delivery (90 d)" value={pct(k.otd_90d)}
-              sub={`${otdDelta >= 0 ? "+" : "−"}${Math.abs(Math.round(otdDelta * 100))} pts vs previous 90 d`}
-              accent={otdDelta < -0.05 ? STATUS.WARNING.color : undefined} />
-        <Stat label="Tier-1 suppliers at risk" value={`${(lv.CRITICAL || 0) + (lv.WARNING || 0)} / ${k.tier1}`}
-              sub={`${lv.CRITICAL || 0} critical · ${lv.WARNING || 0} warning`} />
-        <Stat label="Parts likely short in 60 d" value={k.parts_p60_over_50}
-              sub={`P ≥ 50 % · ${k.parts_short_now} already short`} />
-        <Stat label="Open POs overdue" value={fmt(k.open_pos_overdue)} sub={`of ${fmt(k.open_pos)} open orders`} />
-        <Stat label="Hidden single points of failure" value={k.hidden_spof_parts}
-              sub="dual-sourced parts, one sub-tier" />
-        <Stat label="Ongoing delivery anomalies" value={k.ongoing_anomalies} sub="tier-1, peer-adjusted" />
+        <Stat label="Open orders overdue" value={fmt(k.open_pos_overdue)} sub={`of ${fmt(k.open_pos)} open purchase orders`} />
+        <Stat label="Hidden single points of failure" value={k.hidden_spof_parts} sub="dual-sourced parts that share one sub-tier supplier" />
+        <Stat label="Ongoing delivery anomalies" value={k.ongoing_anomalies} sub="tier-1 suppliers, compared with their peers" />
+        <Stat label="Mean delay, last 90 days" value={`${fmt(k.delay_90d, 1)} d`} sub="all tier-1 deliveries" />
       </div>
 
       <div className="grid-2">
@@ -51,7 +71,7 @@ export default function Overview() {
             layout={baseLayout({
               showlegend: false, yaxis: { tickformat: ".0%", range: [0, 1] },
               shapes: CRISES.map(([a, b]) => ({ type: "rect", xref: "x", yref: "paper", x0: a, x1: b, y0: 0, y1: 1,
-                                                fillcolor: "rgba(143,142,134,0.12)", line: { width: 0 } })),
+                                                fillcolor: "rgba(15,27,45,0.05)", line: { width: 0 } })),
               annotations: CRISES.map(([a, , t], i) => ({ x: a, y: 1 - i * 0.07, yref: "paper", text: t, showarrow: false,
                                                          xanchor: "left", font: { size: 11, color: C.muted } })),
             })} />

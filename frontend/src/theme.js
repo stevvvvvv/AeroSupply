@@ -1,20 +1,23 @@
-// Validated palette (dark-mode steps of the reference data-viz palette) — see README "Design system".
+// Light theme. Categorical slots = light steps of the validated reference data-viz palette
+// (fixed order, colour follows the entity). Status colours are reserved and always ship with an icon.
 export const C = {
-  surface: "#1a1a19",
-  surface2: "#232322",
-  grid: "#2e2e2c",
-  axis: "#55544f",
-  text: "#f0efec",
-  text2: "#c3c2b7",
-  muted: "#8f8e86",
-  series: ["#3987e5", "#d95926", "#199e70", "#c98500"], // blue, orange, aqua, yellow — fixed order
-  band: "rgba(57,135,229,0.18)", // forecast interval fill (series 1 at low alpha)
-  neg: "#e66767", // diverging: raises risk
-  pos: "#3987e5", // diverging: lowers risk
-  mid: "#383835",
+  surface: "#ffffff",
+  paper: "#f4f6f9",
+  grid: "#e8ebf0",
+  axis: "#b9c0cc",
+  text: "#0f1b2d",
+  text2: "#46536a",
+  muted: "#7d889b",
+  accent: "#4b38c9",
+  series: ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"], // blue, orange, aqua, yellow
+  band: "rgba(42,120,214,0.16)",
+  neg: "#e34948", // diverging: raises risk
+  pos: "#2a78d6", // diverging: lowers risk
+  edge: "rgba(15,27,45,0.10)",
+  edgeHi: "rgba(75,56,201,0.55)",
+  edgeDim: "rgba(15,27,45,0.04)",
 };
 
-// Programs keep the same colour everywhere (colour follows the entity, never its rank)
 export const PROGRAM_COLOR = { "NB-200": C.series[0], "WB-350": C.series[1], "RJ-72": C.series[2], "BJ-6": C.series[3] };
 
 export const STATUS = {
@@ -27,10 +30,10 @@ export const STATUS = {
 export const baseLayout = (extra = {}) => ({
   paper_bgcolor: "rgba(0,0,0,0)",
   plot_bgcolor: "rgba(0,0,0,0)",
-  font: { family: "Inter, system-ui, -apple-system, Segoe UI, sans-serif", color: C.text2, size: 12 },
+  font: { family: "'Archivo Variable', system-ui, sans-serif", color: C.text2, size: 12 },
   margin: { l: 52, r: 16, t: 12, b: 40 },
-  hoverlabel: { bgcolor: "#2b2b29", bordercolor: "#444", font: { color: C.text, size: 12 } },
-  legend: { orientation: "h", y: 1.12, x: 0, font: { color: C.text2 } },
+  hoverlabel: { bgcolor: C.text, bordercolor: C.text, font: { color: "#ffffff", size: 12, family: "'Archivo Variable', sans-serif" } },
+  legend: { orientation: "h", y: 1.14, x: 0, font: { color: C.text2 } },
   xaxis: { gridcolor: C.grid, zeroline: false, linecolor: C.axis, tickcolor: C.axis, ...(extra.xaxis || {}) },
   yaxis: { gridcolor: C.grid, zeroline: false, linecolor: C.axis, tickcolor: C.axis, ...(extra.yaxis || {}) },
   ...Object.fromEntries(Object.entries(extra).filter(([k]) => !["xaxis", "yaxis"].includes(k))),

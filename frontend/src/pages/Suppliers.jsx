@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api.js";
 import { useFetch } from "../useFetch.js";
 import Plot from "../components/Plot.jsx";
@@ -10,7 +10,8 @@ const LEVELS = ["CRITICAL", "WARNING", "WATCH", "HEALTHY"];
 
 export default function Suppliers() {
   const { data, error, loading } = useFetch(() => api.suppliers());
-  const [tier, setTier] = useState("");
+  const [params] = useSearchParams();
+  const [tier, setTier] = useState(params.get("tier") || "");
   const [level, setLevel] = useState("");
   const [q, setQ] = useState("");
   const nav = useNavigate();
@@ -33,7 +34,7 @@ export default function Suppliers() {
             return {
               x: pts.map((s) => s.risk_prob), y: pts.map((s) => s.impact_aircraft_90d), type: "scatter", mode: "markers",
               name: STATUS[lv].label, customdata: pts.map((s) => [s.supplier_id, s.name, label(s.commodity)]),
-              marker: { color: STATUS[lv].color, size: pts.map((s) => 8 + Math.sqrt(s.spend_12m_meur || 0) * 1.6),
+              marker: { color: lv === "HEALTHY" ? "#aab3c2" : STATUS[lv].color, size: pts.map((s) => 8 + Math.sqrt(s.spend_12m_meur || 0) * 1.6),
                         line: { color: C.surface, width: 2 }, opacity: 0.9 },
               hovertemplate: "<b>%{customdata[1]}</b><br>%{customdata[2]}<br>P(failure) %{x:.0%}<br>Aircraft at risk if lost: %{y}<extra></extra>",
             };

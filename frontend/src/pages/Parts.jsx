@@ -43,7 +43,7 @@ export default function Parts() {
                 <td><span className="strong">{p.name}</span> <span className="muted small">{p.part_id}</span></td>
                 <td>{label(p.commodity)}</td>
                 <td>{p.programs}</td>
-                <td className="num">{p.in_shortage_now ? <span style={{ color: "#e66767" }}>short</span> : fmt(p.days_of_cover)}</td>
+                <td className="num">{p.in_shortage_now ? <span style={{ color: "#d03b3b", fontWeight: 600 }}>■ short</span> : fmt(p.days_of_cover)}</td>
                 <td className="num">{p.open_pos} ({p.overdue_pos})</td>
                 <td><Meter value={p.p_stockout_30} /></td>
                 <td><Meter value={p.p_stockout_60} /></td>
